@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码审核与解释系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            height: 200px;
+            font-family: monospace;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #2196F3;
+        }
+        button.secondary:hover {
+            background-color: #0b7dda;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>代码审核与解释系统</h1>
+        <div style="text-align: right; margin-bottom: 20px;">
+            <a href="config.html" style="color: #2196F3; text-decoration: none;">⚙️ 模型配置</a>
+        </div>
+        
+
+        
+        <div class="form-group">
+            <label for="language">选择编程语言：</label>
+            <select id="language">
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+                <option value="csharp">C#</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="php">PHP</option>
+                <option value="ruby">Ruby</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>代码输入方式：</label>
+            <div>
+                <input type="radio" name="inputType" value="file" checked>
+                <label for="fileInput">上传文件</label>
+                <input type="radio" name="inputType" value="text">
+                <label for="textInput">直接输入</label>
+            </div>
+        </div>
+        
+        <div class="form-group file-input">
+            <label>选择代码文件或文件夹：</label>
+            <div>
+                <label style="display: block; margin-top: 10px; margin-bottom: 5px;">单个文件：</label>
+                <input type="file" id="codeFile" accept=".js,.py,.java,.c,.cpp,.cs,.go,.rs,.php,.rb">
+                <label style="display: block; margin-top: 10px; margin-bottom: 5px;">整个项目：</label>
+                <input type="file" id="codeFolder" webkitdirectory directory multiple style="margin-top: 0;">
+                <small style="color: #666; display: block; margin-top: 5px;">提示：选择文件夹可上传整个项目目录</small>
+            </div>
+        </div>
+        
+        <div class="form-group text-input" style="display: none;">
+            <label for="codeText">代码内容：</label>
+            <textarea id="codeText" placeholder="请输入代码..."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button id="reviewBtn">审核代码</button>
+            <button id="explainBtn" class="secondary">解释代码</button>
+        </div>
+        
+        <div class="loading" id="loading"></div>
+        
+        <div class="result" id="result"></div>
+    </div>
+    
+    <script>
+        // 切换输入方式
+        document.querySelectorAll('input[name="inputType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'file') {
+                    document.querySelector('.file-input').style.display = 'block';
+                    document.querySelector('.text-input').style.display = 'none';
+                } else {
+                    document.querySelector('.file-input').style.display = 'none';
+                    document.querySelector('.text-input').style.display = 'block';
+                }
+            });
+        });
+        
+        // 审核代码
+        document.getElementById('reviewBtn').addEventListener('click', async function() {
+            await handleRequest('/review', '审核中...');
+        });
+        
+        // 解释代码
+        document.getElementById('explainBtn').addEventListener('click', async function() {
+            await handleRequest('/explain', '解释中...');
+        });
+        
+        async function handleRequest(endpoint, loadingText) {
+            const config = JSON.parse(localStorage.getItem('modelConfig') || '{}');
+            const language = document.getElementById('language').value;
+            const inputType = document.querySelector('input[name="inputType"]:checked').value;
+            
+            if (!config.modelType) {
+                alert('请先配置模型设置');
+                window.location.href = 'config.html';
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            // 检查是否有文件上传
+            const folderFiles = document.getElementById('codeFolder').files;
+            const singleFile = document.getElementById('codeFile').files[0];
+            
+            if (folderFiles.length > 0 || singleFile) {
+                // 有文件上传，使用FormData
+                let formData = new FormData();
+                formData.append('config', JSON.stringify(config));
+                formData.append('language', language);
+                
+                if (folderFiles.length > 0) {
+                    // 处理文件夹上传
+                    for (let i = 0; i < folderFiles.length; i++) {
+                        formData.append('codeFiles', folderFiles[i]);
+                    }
+                } else if (singleFile) {
+                    // 处理单个文件上传
+                    formData.append('codeFile', singleFile);
+                }
+                
+                // 发送请求
+                await sendRequest(endpoint, formData, loading, result);
+            } else {
+                // 没有文件上传，使用JSON格式
+                const codeText = document.getElementById('codeText').value;
+                if (!codeText.trim()) {
+                    alert('请输入代码内容');
+                    return;
+                }
+                
+                const data = {
+                    config: config,
+                    language: language,
+                    code: codeText
+                };
+                
+                // 发送请求
+                await sendRequest(endpoint, data, loading, result, true);
+            }
+            
+        }
+        
+        // 发送请求函数
+        async function sendRequest(endpoint, data, loading, result, isJson = false) {
+            loading.style.display = 'block';
+            result.innerHTML = '';
+            
+            try {
+                // 检查配置是否存在
+                console.log('Config:', data.config || data.get('config'));
+                
+                const options = {
+                    method: 'POST'
+                };
+                
+                if (isJson) {
+                    options.headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    options.body = JSON.stringify(data);
+                } else {
+                    options.body = data;
+                }
+                
+                const response = await fetch(endpoint, options);
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error('请求失败：' + (errorData.error || '未知错误'));
+                }
+                
+                const responseData = await response.json();
+                result.innerHTML = responseData.result;
+            } catch (error) {
+                console.error('Error:', error);
+                result.innerHTML = '错误：' + error.message;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

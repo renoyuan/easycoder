@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型配置</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        select, input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .model-option {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .model-option.hidden {
+            display: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #2196F3;
+        }
+        button.secondary:hover {
+            background-color: #0b7dda;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2196F3;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>模型配置</h1>
+        
+        <div class="form-group">
+            <label for="modelType">选择模型类型：</label>
+            <select id="modelType">
+                <option value="openai">OpenAI (GPT-4)</option>
+                <option value="local">本地部署模型</option>
+                <option value="azure">Azure OpenAI</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+            </select>
+        </div>
+        
+        <!-- OpenAI 配置 -->
+        <div class="model-option" id="openaiConfig">
+            <h3>OpenAI 配置</h3>
+            <div class="form-group">
+                <label for="openaiApiKey">API Key：</label>
+                <input type="password" id="openaiApiKey" placeholder="请输入 OpenAI API Key">
+            </div>
+            <div class="form-group">
+                <label for="openaiModel">模型：</label>
+                <select id="openaiModel">
+                    <option value="gpt-4">gpt-4</option>
+                    <option value="gpt-4-turbo">gpt-4-turbo</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 本地部署模型配置 -->
+        <div class="model-option hidden" id="localConfig">
+            <h3>本地部署模型配置</h3>
+            <div class="form-group">
+                <label for="localUrl">模型 API 地址：</label>
+                <input type="text" id="localUrl" placeholder="例如：http://localhost:9997/v1" value="http://localhost:9997/v1">
+                <small style="color: #666; display: block; margin-top: 5px;">Xinference 默认端口为 9997</small>
+            </div>
+            <div class="form-group">
+                <label for="localModel">模型名称：</label>
+                <input type="text" id="localModel" placeholder="例如：llama3:70b" value="llama3:70b">
+                <small style="color: #666; display: block; margin-top: 5px;">格式：模型名称:大小，例如 llama3:70b</small>
+            </div>
+            <div class="form-group">
+                <label for="localApiKey">API Key（如果需要）：</label>
+                <input type="password" id="localApiKey" placeholder="留空表示不需要">
+            </div>
+        </div>
+        
+        <!-- Azure OpenAI 配置 -->
+        <div class="model-option hidden" id="azureConfig">
+            <h3>Azure OpenAI 配置</h3>
+            <div class="form-group">
+                <label for="azureApiKey">API Key：</label>
+                <input type="password" id="azureApiKey" placeholder="请输入 Azure OpenAI API Key">
+            </div>
+            <div class="form-group">
+                <label for="azureEndpoint">Endpoint：</label>
+                <input type="text" id="azureEndpoint" placeholder="例如：https://your-resource.openai.azure.com/">
+            </div>
+            <div class="form-group">
+                <label for="azureModel">模型部署名称：</label>
+                <input type="text" id="azureModel" placeholder="例如：gpt-4">
+            </div>
+        </div>
+        
+        <!-- Anthropic 配置 -->
+        <div class="model-option hidden" id="anthropicConfig">
+            <h3>Anthropic 配置</h3>
+            <div class="form-group">
+                <label for="anthropicApiKey">API Key：</label>
+                <input type="password" id="anthropicApiKey" placeholder="请输入 Anthropic API Key">
+            </div>
+            <div class="form-group">
+                <label for="anthropicModel">模型：</label>
+                <select id="anthropicModel">
+                    <option value="claude-3-opus-20240229">claude-3-opus-20240229</option>
+                    <option value="claude-3-sonnet-20240229">claude-3-sonnet-20240229</option>
+                    <option value="claude-3-haiku-20240307">claude-3-haiku-20240307</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="saveBtn">保存配置</button>
+            <button id="testBtn" class="secondary">测试连接</button>
+        </div>
+        
+        <a href="index.html" class="back-link">← 返回主页面</a>
+    </div>
+    
+    <script>
+        // 切换模型类型时显示对应配置
+        document.getElementById('modelType').addEventListener('change', function() {
+            const modelType = this.value;
+            
+            // 隐藏所有配置
+            document.querySelectorAll('.model-option').forEach(option => {
+                option.classList.add('hidden');
+            });
+            
+            // 显示对应配置
+            document.getElementById(modelType + 'Config').classList.remove('hidden');
+        });
+        
+        // 保存配置
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            const modelType = document.getElementById('modelType').value;
+            const config = {
+                modelType: modelType
+            };
+            
+            // 根据模型类型获取配置
+            if (modelType === 'openai') {
+                config.openai = {
+                    apiKey: document.getElementById('openaiApiKey').value,
+                    model: document.getElementById('openaiModel').value
+                };
+            } else if (modelType === 'local') {
+                config.local = {
+                    url: document.getElementById('localUrl').value,
+                    model: document.getElementById('localModel').value,
+                    apiKey: document.getElementById('localApiKey').value
+                };
+            } else if (modelType === 'azure') {
+                config.azure = {
+                    apiKey: document.getElementById('azureApiKey').value,
+                    endpoint: document.getElementById('azureEndpoint').value,
+                    model: document.getElementById('azureModel').value
+                };
+            } else if (modelType === 'anthropic') {
+                config.anthropic = {
+                    apiKey: document.getElementById('anthropicApiKey').value,
+                    model: document.getElementById('anthropicModel').value
+                };
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem('modelConfig', JSON.stringify(config));
+            alert('配置已保存！');
+        });
+        
+        // 测试连接
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            alert('测试功能开发中...');
+        });
+        
+        // 加载保存的配置
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('modelConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                document.getElementById('modelType').value = config.modelType;
+                
+                // 触发 change 事件以显示对应配置
+                document.getElementById('modelType').dispatchEvent(new Event('change'));
+                
+                // 填充配置
+                if (config.openai) {
+                    document.getElementById('openaiApiKey').value = config.openai.apiKey;
+                    document.getElementById('openaiModel').value = config.openai.model;
+                }
+                if (config.local) {
+                    document.getElementById('localUrl').value = config.local.url;
+                    document.getElementById('localModel').value = config.local.model;
+                    document.getElementById('localApiKey').value = config.local.apiKey;
+                }
+                if (config.azure) {
+                    document.getElementById('azureApiKey').value = config.azure.apiKey;
+                    document.getElementById('azureEndpoint').value = config.azure.endpoint;
+                    document.getElementById('azureModel').value = config.azure.model;
+                }
+                if (config.anthropic) {
+                    document.getElementById('anthropicApiKey').value = config.anthropic.apiKey;
+                    document.getElementById('anthropicModel').value = config.anthropic.model;
+                }
+            }
+        }
+        
+        // 页面加载时加载配置
+        loadConfig();
+    </script>
+</body>
+</html>
